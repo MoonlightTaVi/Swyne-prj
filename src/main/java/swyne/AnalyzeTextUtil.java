@@ -337,6 +337,21 @@ public class AnalyzeTextUtil {
                                     }
                                     break;
                                 }
+                                case "АКТ": {
+                                    if (!getBonds("АКТЁР").isEmpty() && !toWord.getBonds("АКТЁР").isEmpty()) {
+                                        //System.out.println(getBonds("АКТЁР"));
+                                        //System.out.println(111);
+                                        //System.out.println(toWord.getBonds("АКТЁР"));
+                                        return 0.0f;
+                                    }
+                                    break;
+                                }
+                                case "ОСН": {
+                                    if (!getBonds("ОСН").isEmpty() && !toWord.getBonds("ОСН").isEmpty()) {
+                                        return 0.0f;
+                                    }
+                                    break;
+                                }
                                 default: {
                                     System.err.printf("The \"%s\" morphology information piece is not processed at WordRole.matchWith().%n", matcherInfo);
                                 }
@@ -428,9 +443,15 @@ public class AnalyzeTextUtil {
                     homogenous.addBond(this, dependencySplit[0]);
                 }
             }
+            if (dependencySplit[1].equals("СЛЕДУЕТ")) {
+                for (Word actor : getBonds("АКТЁР")) {
+                    actor.addBond(toWord, "ДЕЙСТВИЕ");
+                    toWord.addBond(actor, "АКТЁР");
+                }
+            }
         }
         public Set<Word> getBonds(String bond) {
-            return bonds.get(bond);
+            return bonds.get(bond) == null ? new HashSet<>() : bonds.get(bond);
         }
         public Set<Word> getBondsWithCondition(String bondName, WordRoleCondition condition) {
             Set<Word> ret = new HashSet<>();
@@ -487,6 +508,14 @@ public class AnalyzeTextUtil {
             //System.out.println(compareTo.getAllBondLemmas());
             return Main.matchSets(ourLemmas, theirLemmas).size() == lesserSet.size();
         }
+        public boolean matchActor(Word matchTo) {
+            if (matchTo.getPOSJoined().contains("С")) {
+                return Main.compareLists(getLemmas(), matchTo.getLemmas()) > 0;
+            } else if (matchTo.getPOSJoined().contains("МС")) {
+                return matchWith(matchTo, "ч,р") > 0;
+            }
+            return false;
+        }
         @Override
         public String toString() {
             StringBuilder info = new StringBuilder();
@@ -532,8 +561,8 @@ public class AnalyzeTextUtil {
             Set<Word> ret = new HashSet<>();
             if (verbs.isEmpty()) {
                 for (Word word : words) {
-                    Set<String> morph = word.findMorphologyJoined(new String[]{"С", "им"});
-                    if (morph.contains("С") && morph.contains("им")) {
+                    Set<String> morph = word.findMorphologyJoined(new String[]{"С", "им", "МС"});
+                    if ((morph.contains("С") || morph.contains("МС")) && morph.contains("им")) {
                         ret.add(word);
                     }
                 }
@@ -585,7 +614,9 @@ public class AnalyzeTextUtil {
             List<Word> temp = new ArrayList<>();
             for (Word word : currentPoint) {
                 Set<Word> bonds = word.getBonds(bond);
-                temp.addAll(bonds);
+                if (bonds != null) {
+                    temp.addAll(bonds);
+                }
             }
             currentPoint = temp;
             waypoints.put(bond, temp);

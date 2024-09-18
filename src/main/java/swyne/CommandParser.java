@@ -21,11 +21,11 @@ public class CommandParser {
         Main.setup();
 
         //pt.makeStamp("Initialization finished");
-        parseLine("Длина - это величина. Длина лежит в пределах от 0 до 100. Длина равняется 40.");
-        parseLine("Длина может быть больше 50 или меньше 50, длина может быть больше 30.");
-        parseLine("Если длина меньше 50, то длина увеличится на 20.");
-        parseLine("Если длина больше 50, то длина уменьшится на 20.");
-        parseLine("Если длина больше 30, то длина уменьшится на 10.");
+        parseLine("Длина - это величина, она лежит в пределах от 0 до 100, равняется 40.");
+        parseLine("Она может быть больше 50 или меньше 50, она может быть больше 30.");
+        parseLine("Если она меньше 50, то она увеличится на 20.");
+        parseLine("Если она больше 50, то она уменьшится на 20.");
+        parseLine("Если она больше 30, то она уменьшится на 10.");
         //pt.makeStamp("Parsing finished");
         compileAll();
         System.out.println("Result:");
@@ -68,8 +68,8 @@ public class CommandParser {
                         line = new Line(parsedSentence);
                     }
                     String name = actor.getLemmas().get(0);
-                    Optional<Node> match = nodes.stream().filter(n -> n.getName().equals(name)).findFirst();
-                    node = match.orElse(new Node(name));
+                    Optional<Node> match = nodes.stream().filter(n -> n.matchActor(actor)).findFirst();
+                    node = match.orElse(new Node(name, actor));
                     if (checkedNodes.contains(node)) {
                         continue;
                     }

@@ -85,15 +85,15 @@ public class SentenceRegexParser {
                         // We also replace the text and the morphology with that, the punctuation stays untouched.
                         // If there are two or more possible members of sentence
                         if (split.length > 1) {
-                            resultRegexList.add(parts[id].replace(matcher.group("keyword"), String.format("(?<word%d>(%s)(или(%s))*-(?<wordId%d>[0-9]+)", id, String.join("|", split), String.join("|", split), id)).replace(matcher.group("info"), String.format("(?<info%d><%s>))", id, matcher.group("infoInterior"))));
+                            resultRegexList.add(parts[id].replace(matcher.group("keyword"), String.format("(%s)(или(%s))*-(?:[0-9]+)", String.join("|", split), String.join("|", split))).replace(matcher.group("info"), String.format("(?:<%s>)", matcher.group("infoInterior"))));
                         }
                         // If there's only one variation
                         else {
-                            resultRegexList.add(parts[id].replace(matcher.group("keyword"), String.format("(?<word%d>((?:или[А-Яа-я]+)*%s(?:или[А-Яа-я]+)*)-(?<wordId%d>[0-9]+)", id, split[0], id)).replace(matcher.group("info"), String.format("(?<info%d><%s>))", id, matcher.group("infoInterior"))));
+                            resultRegexList.add(parts[id].replace(matcher.group("keyword"), String.format("(?:[А-Яа-я]+или)*%s(?:или[А-Яа-я]+)*-(?:[0-9]+)", split[0])).replace(matcher.group("info"), String.format("(?:<%s>)", matcher.group("infoInterior"))));
                         }
                     }
                     // We then collect the transformed groups into a single group "collocation", which is needed further.
-                    String resultRegex = String.format("(.*?)(?<collocation>%s)(.*?)", String.join("\\s", resultRegexList));
+                    String resultRegex = String.format("(.*?)(?<collocation>%s)(.*?)", String.join(" ", resultRegexList));
                     patterns.add(new ParserPair(mainRegex.group("key"), resultRegex));
                 }
             }
@@ -114,14 +114,24 @@ public class SentenceRegexParser {
             //  since the sentence (made of sentence members, not the actual words) does not contain it
             String regexRaw = entry.value;
             String regex = regexRaw;
-            String modifyRegex = "(?<match>(?<member>\\(\\?<word([0-9]+)>([а-яА-Я()|*?:\\[\\]\\-+]+)-\\(\\?<wordId([0-9]+)>\\[0-9]\\+\\))\\(\\?<info(?<id>([0-9]+))><(?<info>[а-яА-Я,]*)>\\)\\))";
+            //System.out.println(regex);
+            String modifyRegex = "(?<match>(?<member>[а-яА-Я()|*?:\\[\\]\\-+]+-\\(\\?\\:\\[0-9]\\+\\))\\(\\?\\:<(?<info>[а-яА-Я,]*)>\\))";
+            //System.out.println(modifyRegex);
             Map<String, String> id2info = new HashMap<>();
             for (Entry modifyMatcher : compileRegex(modifyRegex).match(regexRaw)) {
-                regex = regex.replace(modifyMatcher.group("match"), modifyMatcher.group("member") + ")");
+                regex = regex.replace(modifyMatcher.group("match"), modifyMatcher.group("member"));
                 id2info.put(modifyMatcher.group("id"), modifyMatcher.group("info"));
             }
+            //System.out.println(regex);
             // We then start the work
-            for (Entry matcher : compileRegex(regex).match(text)) {
+            //System.out.println(text);
+            //System.out.println(compileRegex(regex).match(text).getMatchResults());
+            //System.out.println(compileRegex(regex).match(text).getMatchResults().size());
+            RegexHelper match = compileRegex(regex).match(text, "\\b(?:[а-яА-Я]+)-(?:[0-9]+)\\b");
+            if (!match.getMatchResults().isEmpty()) {
+                log.add(String.format("Found matches: %s\n%s", regex, match.getMatchResults().toString()));
+            }
+            for (Entry matcher : match) {
                 // We process the key of the pattern, extracting...
                 RegexHelper keyMatcher = new RegexHelper("(?<dependency>[а-яА-Я-:Ёё]+):\\s*(?<member>[а-яА-Я]+(\\((.*?)\\))?)\\[(?<info>(.*?))]")
                         .match(entry.key);
@@ -135,7 +145,7 @@ public class SentenceRegexParser {
                 }
                 // We collect a list of (position of the word in the sentence)-(word)
                 List<ParserPair> id2word = new ArrayList<>();
-                String memberRegex = "(^[а-яА-Я])*?(?<member>[а-яА-Я]+)-(?<memberId>[0-9]+)(^[а-яА-Я])*?";
+                String memberRegex = "\\b(?<member>[а-яА-Я]+)-(?<memberId>[0-9]+)\\b";
                 boolean matchInvalid = false;
                 for (Entry memberMatcher : compileRegex(memberRegex).match(matcher.group("collocation"))) {
                     String id = memberMatcher.group("memberId");

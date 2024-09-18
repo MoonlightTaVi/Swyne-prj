@@ -12,14 +12,19 @@ public class Core {
     public static class Node {
         protected Node extendsNode;
         protected final String name;
+        protected final Word actor;
         protected List<Line> code = new ArrayList<>();
         protected final Map<String, String> args = new HashMap<>();
         public Node(String name) {
-            this.name = name.toLowerCase();
+            this(name, new Word(name, 0));
         }
-        public Node(String name, Node extendsNode) {
+        public Node(String name, Word actor) {
+            this(name, actor, null);
+        }
+        public Node(String name, Word actor, Node extendsNode) {
             this.name = name.toLowerCase();
             this.extendsNode = extendsNode;
+            this.actor = actor;
         }
         public void setCode(List<Line> code) {
             this.code = code;
@@ -38,7 +43,7 @@ public class Core {
             List<Word> verbs = sentence.getVerbs();
             for (Word verb : verbs) {
                 for (Word actor : verb.getBonds("АКТЁР")) {
-                    if (!actor.getLemmas().contains(this.getName())) {
+                    if (!matchActor(actor)) {
                         continue;
                     }
                     Word nextVerb = verb;
@@ -58,7 +63,7 @@ public class Core {
                             for (String extendsName : extendsNames[0]) {
                                 if (nodes.containsKey(extendsName.toLowerCase())) {
                                     if (nodes.get(extendsName.toLowerCase()) instanceof Value) {
-                                        Value newValue = new Value(name);
+                                        Value newValue = new Value(name, actor);
                                         newValue.setCode(code);
                                         nodes.put(name.toLowerCase(), newValue);
                                         newValue.compile();
@@ -89,20 +94,22 @@ public class Core {
                         started = true;
                         continue;
                     }
-                    if (!actor.getBonds("ДЕЙСТВИЕ").contains(verb)) {
-                        continue;
-                    }
-                    if (line.getCondition() != null) {
-                        for (Word conditionActor : line.getCondition().getActors()) {
-                            if (Main.compareLists(actor.getLemmas(), conditionActor.getLemmas()) == 0) {
-                                continue;
-                            }
-                            if (!actor.compareLemmas(conditionActor)) {
-                                continue;
-                            }
-                            if (check(line.getCondition()) == 1) {
-                                execute(line);
-                                return;
+                    for (Word action : actor.getBonds("ДЕЙСТВИЕ")) {
+                        if (action != verb) {
+                            continue;
+                        }
+                        if (line.getCondition() != null) {
+                            for (Word conditionActor : line.getCondition().getActors()) {
+                                if (Main.compareLists(actor.getLemmas(), conditionActor.getLemmas()) == 0) {
+                                    continue;
+                                }
+                                if (!actor.compareLemmas(conditionActor)) {
+                                    continue;
+                                }
+                                if (check(line.getCondition()) == 1) {
+                                    execute(line);
+                                    return;
+                                }
                             }
                         }
                     }
@@ -128,9 +135,15 @@ public class Core {
         public Node getExtends() {
             return extendsNode;
         }
-
         public void setExtends(Node setTo) {
             this.extendsNode = setTo;
+        }
+        public boolean matchActor(Word matchTo) {
+            if (this.actor == null) {
+                System.err.printf("\"%s\" does not have an actor property.%n", this.name);
+                return false;
+            }
+            return actor.matchActor(matchTo);
         }
 
         @Override
@@ -159,6 +172,9 @@ public class Core {
         public Value(String name) {
             super(name);
         }
+        public Value(String name, Word actor) {
+            super(name, actor);
+        }
 
         @Override
         public boolean execute(Line line) {
@@ -167,7 +183,7 @@ public class Core {
             List<Word> verbs = sentence.getVerbs();
             for (Word verb : verbs) {
                 for (Word actor : verb.getBonds("АКТЁР")) {
-                    if (!actor.getLemmas().contains(this.getName())) {
+                    if (!matchActor(actor)) {
                         continue;
                     }
                     Word nextVerb = verb;
@@ -195,6 +211,7 @@ public class Core {
                                 try {
                                     if (!args.containsKey("значение")) {
                                         System.err.printf("No value has been assigned to \"%s\".%n", actor.getName());
+                                        nextVerb = nextVerb.getNextVerb();
                                         continue;
                                     }
                                     double value = Double.parseDouble(args.get("значение"));
@@ -227,7 +244,7 @@ public class Core {
             }
             List<Word> actors = condition.getActors();
             for (Word actor : actors) {
-                if (!actor.getLemmas().contains(this.getName())) {
+                if (!matchActor(actor)) {
                     continue;
                 }
                 Set<Word> comparisons = actor.getBonds("СРАВН");
@@ -239,7 +256,9 @@ public class Core {
                     if (number.isPresent()) {
                         double value = 0.0;
                         try {
-                            value = Double.parseDouble(args.get("значение"));
+                            if (args.containsKey("значение")) {
+                                value = Double.parseDouble(args.get("значение"));
+                            }
                         } catch (IllegalArgumentException e) {
                             System.err.printf("Couldn't parse \"значение\" of \"%s\".%n", name);
                         }
@@ -275,20 +294,9 @@ public class Core {
         public Location(String name) {
             super(name);
         }
-
-    }
-
-    public static void addNode(String name, String extendsNodeName) {
-        if (!Core.nodes.containsKey(extendsNodeName.toLowerCase())) {
-            System.err.printf("swyne.Core does not have a node with name: \"%s\".%n", extendsNodeName);
-            return;
+        public Location(String name, Word actor) {
+            super(name, actor);
         }
-        if (Core.nodes.containsKey(name.toLowerCase())) {
-            System.err.printf("swyne.Core does already have a node with name: \"%s\".%n", name);
-            return;
-        }
-        Node extendsNode = Core.nodes.get(extendsNodeName.toLowerCase());
-        Node newNode = new Node(name.toLowerCase(), extendsNode);
-        Core.nodes.put(name.toLowerCase(), newNode);
+
     }
 }
