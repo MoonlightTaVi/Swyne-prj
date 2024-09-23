@@ -3,6 +3,7 @@ package swyne;
 import main.Main;
 import swyne.AnalyzeTextUtil.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Core {
     public static Map<String, Node> nodes = new HashMap<>();
@@ -103,7 +104,9 @@ public class Core {
                                 if (Main.compareLists(actor.getLemmas(), conditionActor.getLemmas()) == 0) {
                                     continue;
                                 }
-                                if (!actor.compareLemmas(conditionActor)) {
+                                Set<Word> ignore = new HashSet<>(new BondCollector(actor).collect("ДЕЙСТВИЕ").get());
+                                ignore.remove(verb);
+                                if (!actor.compareLemmas(conditionActor, ignore)) {
                                     continue;
                                 }
                                 if (check(line.getCondition()) == 1) {
@@ -126,7 +129,7 @@ public class Core {
                 }
             }
         }
-        public int check(AnalyzeTextUtil.Sentence condition) {
+        public int check(Sentence condition) {
             return -1;
         }
         public String getName() {

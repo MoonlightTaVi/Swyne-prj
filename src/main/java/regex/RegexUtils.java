@@ -70,7 +70,9 @@ public class RegexUtils {
         public RegexHelper match(String text, String iteratorRegex) {
             matchResults.clear(); // Clear the prev results on a new match
             currentEntryId = 0; // Reset the iterator
-
+            if (text == null) {
+                return this;
+            }
             List<Integer> endPoss = new ArrayList<>(); // For .find()'s steps
             if (!iteratorRegex.isEmpty()) { // We find all the end positions of occurrences of iteratorRegex in the text
                 Pattern p = Pattern.compile(iteratorRegex);
@@ -86,22 +88,36 @@ public class RegexUtils {
                 Pattern p = Pattern.compile(entry.getKey());
                 Matcher m = p.matcher(text);
                 int start = 0; // Next step
-                while (m.find(start)) {
-                    Entry temp = new Entry();
-                    for (String group : entry.getValue()) { // For each group
-                        log.add(String.format("Found group \"%s\" is set to \"%s\" at: %s", group, m.group(group), text));
-                        // If we haven't encountered a group with this name, match, and position yet...
-                        Optional<Entry> match = matchResults.stream().filter(r -> r.containsValue(group, m.group(group), m.end(group))).findFirst();
-                        if (match.isEmpty()) {
-                            temp.put(group, m.group(group), m.end(group)); // Store the group name, its match, and end position
+                while (true) { // We iterate through ALL the matches
+                    boolean stop = true;
+                    int step = start;
+                    while (m.find(step)) { // We iterate through all the matches from the current start
+                        stop = false;
+                        Entry temp = new Entry();
+                        for (String group : entry.getValue()) { // For each group
+                            log.add(String.format("Found group \"%s\" is set to \"%s\" at: %s", group, m.group(group), text));
+                            // If we haven't encountered a group with this name, match, and position yet...
+                            Optional<Entry> match = matchResults.stream().filter(r -> r.containsValue(group, m.group(group), m.end(group))).findFirst();
+                            if (match.isEmpty()) {
+                                temp.put(group, m.group(group), m.end(group)); // Store the group name, its match, and end position
+                            }
                         }
+                        matchResults.add(temp); // Add all groups as an Entry
+                        step = m.end(0);
                     }
-                    matchResults.add(temp); // Add all groups as an Entry
-                    if (!endPoss.isEmpty() && i < endPoss.size() && (endPoss.get(i) != m.end(i))) { // Move "start"
+                    // We increase start and iterate again
+                    if (!endPoss.isEmpty()) { // Move "start"
                         log.add(String.format("Moved regex iterator to the %d character.", endPoss.get(i)));
-                        start = endPoss.get(i++);
-                    } else {
-                        start = m.end(0);
+                        if (i < endPoss.size() - 1) {
+                            start = endPoss.get(i++);
+                        } else {
+                            break;
+                        }
+                    } else if (!stop) {
+                        start = step;
+                    }
+                    if (stop) { // Or break the loop, if no matches
+                        break;
                     }
                 }
             }
@@ -213,6 +229,9 @@ public class RegexUtils {
         }
         public Map<String, String> getValue() { // Get all matches as a Map
             return value;
+        }
+        public boolean isEmpty() {
+            return keys.isEmpty();
         }
         @Override
         public boolean hasNext() {

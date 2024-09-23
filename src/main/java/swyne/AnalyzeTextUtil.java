@@ -480,32 +480,38 @@ public class AnalyzeTextUtil {
             return next.orElse(null);
         }
         public Set<String> getAllBondLemmas() {
+            return getAllBondLemmas(new HashSet<>());
+        }
+        public Set<String> getAllBondLemmas(Set<Word> ignore) {
             Set<String> ret = new HashSet<>(lemmas);
             for (Map.Entry<String, Set<Word>> entry : bonds.entrySet()) {
                 for (Word word : entry.getValue()) {
-                    ret.addAll(word.getAllBondLemmas(ret));
+                    if (!ignore.contains(word)) {
+                        ret.addAll(word.getAllBondLemmas(ret, ignore));
+                    }
                 }
             }
             return ret;
         }
-        public Set<String> getAllBondLemmas(Set<String> checked) {
+        public Set<String> getAllBondLemmas(Set<String> checked, Set<Word> ignore) {
             Set<String> ret = new HashSet<>(lemmas);
             ret.addAll(checked);
             for (Map.Entry<String, Set<Word>> entry : bonds.entrySet()) {
                 for (Word word : entry.getValue()) {
-                    if (!ret.contains(word.getLemmas().get(0))) {
-                        ret.addAll(word.getAllBondLemmas(ret));
+                    if (!ret.contains(word.getLemmas().get(0)) && !ignore.contains(word)) {
+                        ret.addAll(word.getAllBondLemmas(ret, ignore));
                     }
                 }
             }
             return ret;
         }
         public boolean compareLemmas(Word compareTo) {
-            Set<String> ourLemmas = getAllBondLemmas();
-            Set<String> theirLemmas = compareTo.getAllBondLemmas();
+            return compareLemmas(compareTo, new HashSet<>());
+        }
+        public boolean compareLemmas(Word compareTo, Set<Word> ignore) {
+            Set<String> ourLemmas = getAllBondLemmas(ignore);
+            Set<String> theirLemmas = compareTo.getAllBondLemmas(ignore);
             Set<String> lesserSet = ourLemmas.size() > theirLemmas.size() ? theirLemmas : ourLemmas;
-            //System.out.println(getAllBondLemmas());
-            //System.out.println(compareTo.getAllBondLemmas());
             return Main.matchSets(ourLemmas, theirLemmas).size() == lesserSet.size();
         }
         public boolean matchActor(Word matchTo) {
