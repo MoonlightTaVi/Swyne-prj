@@ -1,8 +1,8 @@
 package main;//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-import swyne.CommandParser;
-import swyne.Core;
-import swyne.SentenceRegexParser;
+import swyne.utils.CommandParser;
+import swyne.core.Core;
+import swyne.utils.SentenceRegexParser;
 
 import javax.swing.*;
 import java.util.HashSet;

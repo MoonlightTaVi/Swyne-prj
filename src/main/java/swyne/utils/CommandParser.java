@@ -1,13 +1,15 @@
-package swyne;
+package swyne.utils;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import main.Main;
 import regex.RegexUtils.*;
-import swyne.AnalyzeTextUtil.*;
-import swyne.Core.Node;
-import swyne.Core.Line;
+import swyne.Sentence;
+import swyne.Word;
+import swyne.core.Core;
+import swyne.core.Node;
+import swyne.core.Line;
 
 public class CommandParser {
     private static final List<Node> nodes = new ArrayList<>();
@@ -17,7 +19,7 @@ public class CommandParser {
         regex.add("Если (?<condition>(.*?)), то (?<command>(.*?))([.?!])");
     }
     public static void main(String[] args) {
-        //utils.PassedTime pt = new utils.PassedTime("swyne.CommandParser.main()");
+        //utils.PassedTime pt = new utils.PassedTime("swyne.utils.CommandParser.main()");
         Main.setup();
 
         //pt.makeStamp("Initialization finished");

@@ -1,6 +1,6 @@
 package main;
 
-import swyne.AnalyzeTextUtil;
+import swyne.utils.AnalyzeTextUtil;
 
 import javax.swing.*;
 
@@ -35,7 +35,7 @@ public class ConsoleWindow extends JFrame {
         setVisible(true);
     }
     private void execute() {
-        //outputArea.setText(swyne.AnalyzeTextUtil.testTransformations(inputField.getText()));
+        //outputArea.setText(swyne.utils.AnalyzeTextUtil.testTransformations(inputField.getText()));
         StringBuilder temp = new StringBuilder();
         for(String w : AnalyzeTextUtil.splitIntoTokens(inputField.getText())) {
             temp.append(String.format("[%s] ", w));

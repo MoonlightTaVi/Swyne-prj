@@ -1,11 +1,12 @@
-package swyne;
+package swyne.utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
 import regex.RegexUtils.*;
-import swyne.AnalyzeTextUtil.*;
+import swyne.Word;
+
 import static regex.RegexUtils.compileRegex;
 
 // SentenceRegexParser collects word patterns from parser_regex.txt
@@ -19,7 +20,7 @@ public class SentenceRegexParser {
     // If a collocation in the text (sentence) matches the "member of sentence" pattern,
     //  as well as the conditions (morphology between matched words, e.g. cases, numbers, genders, etc.),
     //  it is then replaced with the main word, at the time the words are connected with each other
-    //  by a <<bond>> (look at swyne.AnalyzeTextUtil.Word), and the new sentence (with the collocation
+    //  by a <<bond>> (look at swyne.utils.AnalyzeTextUtil.Word), and the new sentence (with the collocation
     //  replaced by a single word) is recursively processed from the beginning
     // Pattern order is significant, so we use List of records instead of a Map
     private static final List<ParserPair> patterns = new ArrayList<>();
@@ -98,13 +99,13 @@ public class SentenceRegexParser {
                 }
             }
         } catch (FileNotFoundException e) {
-            System.err.println("swyne.SentenceRegexParser has no access to the \"parser_regex.txt\" file.");
+            System.err.println("swyne.utils.SentenceRegexParser has no access to the \"parser_regex.txt\" file.");
         }
     }
     // The magic of NLP lays here
-    public static String parse(String text, AnalyzeTextUtil.Word[] arrayOfWords) {
+    public static String parse(String text, Word[] arrayOfWords) {
         if (patterns.isEmpty()) {
-            System.err.println("The \"patterns\" field in swyne.SentenceRegexParser is empty.");
+            System.err.println("The \"patterns\" field in swyne.utils.SentenceRegexParser is empty.");
             return "";
         }
         log.add(String.format("New iteration: \"%s\"%n", text));
@@ -239,7 +240,7 @@ public class SentenceRegexParser {
         log.add("Parsing complete!");
         return ""; // Or there are no matches
     }
-    public static String parse(String text, AnalyzeTextUtil.Word[] arrayOfWords, String originalText) {
+    public static String parse(String text, Word[] arrayOfWords, String originalText) {
         log.add(String.format("New sentence: \"%s\"%n", originalText));
         String result = parse(text, arrayOfWords);
         log.forEach(System.out::println);
