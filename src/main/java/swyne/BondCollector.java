@@ -10,7 +10,9 @@ public class BondCollector {
 
     public BondCollector(Word word) {
         start = word;
-        currentPoint.add(word);
+        if (word != null) {
+            currentPoint.add(word);
+        }
     }
 
     public BondCollector toStart() {
@@ -26,7 +28,7 @@ public class BondCollector {
         }
         List<Word> temp = new ArrayList<>();
         for (Word word : currentPoint) {
-            Set<Word> bonds = word.getBonds(bond);
+            Set<Word> bonds = word.getBond(bond);
             if (bonds != null) {
                 temp.addAll(bonds);
             }
@@ -57,7 +59,7 @@ public class BondCollector {
         }
         List<Word> temp = new ArrayList<>();
         for (Word word : currentPoint) {
-            Set<Word> bonds = word.getBonds(bond);
+            Set<Word> bonds = word.getBond(bond);
             temp.addAll(bonds);
         }
         if (!temp.isEmpty()) {

@@ -48,26 +48,29 @@ public class Node {
         Sentence sentence = line.getLine();
         List<Word> verbs = sentence.getVerbs();
         for (Word verb : verbs) {
-            for (Word actor : verb.getBonds("АКТЁР")) {
+            for (Word actor : verb.getBond("АКТЁР")) {
                 if (!matchActor(actor)) {
                     continue;
                 }
-                Word nextVerb = verb;
-                while (nextVerb != null) {
-                    //System.out.println(nextVerb);
-                    //System.out.println(nextVerb.getLemmas());
+                if (Main.compareLists(actor.getLemmas(), List.of("величина", "локация")) > 0) {
+                    continue;
+                }
+                for (Word nextVerb = verb; nextVerb != null; nextVerb = nextVerb.getNextVerb()) {
                     if (Main.compareLists(nextVerb.getLemmas(), List.of("есть")) > 0) {
                         if (Core.nodes.containsKey(name)) {
-                            nextVerb = nextVerb.getNextVerb();
                             continue;
                         }
-                        //System.out.println(111);
-                        Optional<Word> extendsWord = nextVerb.getBondsWithCondition("АРГУМЕНТ", w -> w.getCasesJoined().contains("им")).stream().findFirst();
-                        final List<String>[] extendsNames = new List[]{new ArrayList<>()};
-                        extendsWord.ifPresent(ext -> extendsNames[0] = ext.getLemmas());
-                        //System.out.println(extendsWord);
-                        for (String extendsName : extendsNames[0]) {
+                        Word extendsWord = new BondCollector(nextVerb).collect("АРГУМЕНТ").filter(w -> w.getCasesJoined().contains("им")).getFirst().orElse(null);
+                        if (extendsWord == null) {
+                            extendsWord = new BondCollector(sentence.getNextTo(verb)).collect("АКТЁР").getFirst().orElse(null);
+                        }
+                        List<String> extendsNames = new ArrayList<>();
+                        if (extendsWord != null) {
+                            extendsNames = extendsWord.getLemmas();
+                        }
+                        for (String extendsName : extendsNames) {
                             if (Core.nodes.containsKey(extendsName.toLowerCase())) {
+                                extendsWord.refactorBond(nextVerb, "ДЕЙСТВИЕ", "ПРЕДШЕСТВУЕТ-СЛЕДУЕТ");
                                 if (Core.nodes.get(extendsName.toLowerCase()) instanceof Value) {
                                     Value newValue = new Value(name, actor);
                                     newValue.setCode(code);
@@ -84,7 +87,6 @@ public class Node {
                     if (Main.compareLists(nextVerb.getLemmas(), List.of("мочь")) > 0) {
                         findAndExecute(line, nextVerb);
                     }
-                    nextVerb = nextVerb.getNextVerb();
                 }
             }
         }
@@ -101,7 +103,7 @@ public class Node {
                     started = true;
                     continue;
                 }
-                for (Word action : actor.getBonds("ДЕЙСТВИЕ")) {
+                for (Word action : actor.getBond("ДЕЙСТВИЕ")) {
                     if (action != verb) {
                         continue;
                     }

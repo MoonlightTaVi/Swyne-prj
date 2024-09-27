@@ -38,28 +38,6 @@ public class SentenceRegexParser {
         try (Scanner scanner = new Scanner(new File("src/main/resources/data/parser_regex.txt"))) {
             while (scanner.hasNext()) {
                 String line = scanner.nextLine();
-                /*RegexHelper dependencyMatcher = new RegexHelper("(?<mainWord>[а-яА-Я]+)\\s*->\\s*(?<dependentWord>[а-яА-Я]+)(^[а-яА-Я])*")
-                        .match(line);
-                if (dependencyMatcher.find()) {
-                    String key = dependencyMatcher.group("mainWord");
-                    String value = dependencyMatcher.group("dependentWord");
-                    if (dependencies.containsKey(key)) {
-                        dependencies.get(key).add(value);
-                        if (key.contains("или")) { // Is it needed? Or do they share it?
-                            String[] split = key.split("или");
-                            dependencies.get(String.format("%sили%s", split[1], split[0])).add(value);
-                        }
-                    }
-                    else {
-                        Set<String> newSet = new HashSet<>();
-                        newSet.add(value);
-                        dependencies.put(key, newSet);
-                        if (key.contains("или")) {
-                            String[] split = key.split("или");
-                            dependencies.put(String.format("%sили%s", split[1], split[0]), newSet);
-                        }
-                    }
-                }*/
                 // mainRegex divides the line into the key and the value for the "patterns" (see explanation above)
                 // Spaces near "=" sign don't matter, commentaries are possible in the text file
                 RegexHelper mainRegex = new RegexHelper("^(?<key>(.*?))\\s*=\\s*(?<value>(.*?))((?=\\s*//)|$)")
@@ -123,11 +101,7 @@ public class SentenceRegexParser {
                 regex = regex.replace(modifyMatcher.group("match"), modifyMatcher.group("member"));
                 id2info.put(modifyMatcher.group("id"), modifyMatcher.group("info"));
             }
-            //System.out.println(regex);
             // We then start the work
-            //System.out.println(text);
-            //System.out.println(compileRegex(regex).match(text).getMatchResults());
-            //System.out.println(compileRegex(regex).match(text).getMatchResults().size());
             RegexHelper match = compileRegex(regex).match(text, "\\b(?:[а-яА-Я]+)-(?:[0-9]+)\\b");
             if (!match.getMatchResults().isEmpty()) {
                 log.add(String.format("Found matches: %s\n%s", regex, match.getMatchResults().toString()));
@@ -192,7 +166,6 @@ public class SentenceRegexParser {
                     }
                     if (compileRegex(replaceRegex).match(text).find()) { // Finally, we replace the two with one
                         String forFurtherProcessing = replacePairWithOne(text, matcher.group("collocation"), main, mainMember, mainId);
-                        //System.out.println(forFurtherProcessing);
                         // And we recursively start from the beginning, given a new sentence for processing
                         String ret = parse(forFurtherProcessing, arrayOfWords);
                         if (ret.isEmpty()) { // If the job is finished, return the unprocessed (at this iteration) text
@@ -224,7 +197,6 @@ public class SentenceRegexParser {
                         String replaceRegex = String.format("(?<match>%s-%s(.*?)%s-%s)", id2word.get(0).value, id2word.get(0).key, id2word.get(1).value, id2word.get(1).key);
                         if (compileRegex(replaceRegex).match(text).find()) {
                             String forFurtherProcessing = replacePairWithOne(text, matcher.group("collocation"), main, mainMember, mainId);
-                            //System.out.println(forFurtherProcessing);
                             // And start over
                             String ret = parse(forFurtherProcessing, arrayOfWords);
                             if (ret.isEmpty()) {

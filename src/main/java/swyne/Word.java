@@ -208,7 +208,7 @@ public class Word {
                                 break;
                             }
                             case "АКТ": {
-                                if (!getBonds("АКТЁР").isEmpty() && !toWord.getBonds("АКТЁР").isEmpty()) {
+                                if (!getBond("АКТЁР").isEmpty() && !toWord.getBond("АКТЁР").isEmpty()) {
                                     //System.out.println(getBonds("АКТЁР"));
                                     //System.out.println(111);
                                     //System.out.println(toWord.getBonds("АКТЁР"));
@@ -217,7 +217,7 @@ public class Word {
                                 break;
                             }
                             case "ОСН": {
-                                if (!getBonds("ОСН").isEmpty() && !toWord.getBonds("ОСН").isEmpty()) {
+                                if (!getBond("ОСН").isEmpty() && !toWord.getBond("ОСН").isEmpty()) {
                                     return 0.0f;
                                 }
                                 break;
@@ -263,6 +263,9 @@ public class Word {
     public Set<String> getPossibleMembers() {
         Set<String> possibleMembers = new HashSet<>();
         Set<String> POSs = getPOSJoined();
+        if (POSs.contains("П") && POSs.contains("МС")) {
+            possibleMembers.add("ПРИЛМЕСТ");
+        }
         if (POSs.contains("С") || POSs.contains("МС")) {
             Set<String> cases = getCasesJoined();
             if (cases.contains("им")) {
@@ -318,14 +321,41 @@ public class Word {
             }
         }
         if (dependencySplit[1].equals("СЛЕДУЕТ")) {
-            for (Word actor : getBonds("АКТЁР")) {
+            for (Word actor : getBond("АКТЁР")) {
                 actor.addBond(toWord, "ДЕЙСТВИЕ");
                 toWord.addBond(actor, "АКТЁР");
             }
         }
     }
 
-    public Set<Word> getBonds(String bond) {
+    public void refactorBond(Word toWord, String bond) {
+        for (Word w : getBond(bond)) {
+            toWord.addBond(w, bond);
+            for (Map.Entry<String, Set<Word>> entry : w.getBonds().entrySet()) {
+                if (entry.getValue().contains(this)) {
+                    w.getBonds().get(entry.getKey()).remove(this);
+                    w.makeBond(toWord, entry.getKey());
+                }
+            }
+        }
+    }
+
+    public void refactorBond(Word toWord, String bond, String newBondType) {
+        for (Word w : getBond(bond)) {
+            toWord.makeBond(w, newBondType);
+            for (Map.Entry<String, Set<Word>> entry : w.getBonds().entrySet()) {
+                if (entry.getValue().contains(this)) {
+                    w.getBonds().get(entry.getKey()).remove(this);
+                }
+            }
+        }
+    }
+
+    public Map<String, Set<Word>> getBonds() {
+        return bonds;
+    }
+
+    public Set<Word> getBond(String bond) {
         return bonds.get(bond) == null ? new HashSet<>() : bonds.get(bond);
     }
 
@@ -344,18 +374,41 @@ public class Word {
     }
 
     public Optional<Word> getFirstBond(String bondName) {
-        return getBonds(bondName).stream().findFirst();
+        return getBond(bondName).stream().findFirst();
     }
 
     public Word getFirstBondWithCondition(String bondName, WordRoleCondition condition) {
         return getBondsWithCondition(bondName, condition).stream().findFirst().orElse(null);
     }
 
+    public String bondsToString() {
+        Set<Word> checked = new HashSet<>();
+        return bondsToString(checked, 0);
+    }
+    public String bondsToString(Set<Word> checked, int depth) {
+        String indentation = "\t".repeat(depth);
+        StringBuilder ret = new StringBuilder(indentation);
+        ret.append(String.format("\"%s\"\n", name));
+        if (checked.contains(this)) {
+            return ret.toString();
+        }
+        checked.add(this);
+        for (Map.Entry<String, Set<Word>> entry : getBonds().entrySet()) {
+            ret.append(indentation);
+            ret.append(entry.getKey());
+            ret.append(":\n");
+            for (Word w : entry.getValue()) {
+                ret.append(w.bondsToString(checked, depth + 1));
+            }
+        }
+        return ret.toString();
+    }
+
     public Word getNextVerb() {
-        if (getBonds("СЛЕДУЕТ") == null) {
+        if (getBond("СЛЕДУЕТ") == null) {
             return null;
         }
-        Optional<Word> next = getBonds("СЛЕДУЕТ").stream().findFirst();
+        Optional<Word> next = getBond("СЛЕДУЕТ").stream().findFirst();
         return next.orElse(null);
     }
 

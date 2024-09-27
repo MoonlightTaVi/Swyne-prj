@@ -14,23 +14,29 @@ import swyne.core.Line;
 public class CommandParser {
     private static final List<Node> nodes = new ArrayList<>();
     private static final RegexHelper regex = new RegexHelper();
+    private static String code = "";
     public static void setup() {
         regex.add("(?<term>(.*?)) - это (?<definition>(.*?))([.?!])");
         regex.add("Если (?<condition>(.*?)), то (?<command>(.*?))([.?!])");
+        code = new FileReader().setDirectory("src/main/resources/code")
+                .add("test.txt")
+                .readAllToString();
     }
     public static void main(String[] args) {
         //utils.PassedTime pt = new utils.PassedTime("swyne.utils.CommandParser.main()");
         Main.setup();
-
+        parseLine(code);
+        compileAll();
         //pt.makeStamp("Initialization finished");
-        parseLine("Длина - это величина, она лежит в пределах от 0 до 100, равняется 40.");
+        /*parseLine("Длина - это величина, она лежит в пределах от 0 до 100, равняется 40.");
         parseLine("Она может быть больше 50 или меньше 50, может быть больше 30.");
         parseLine("Если она меньше 50, то она увеличится на 20.");
         parseLine("Если она больше 50, то она уменьшится на 20.");
         parseLine("Если она больше 30, то она уменьшится на 10.");
         //pt.makeStamp("Parsing finished");
-        compileAll();
+        compileAll();*/
         System.out.println("Result:");
+        System.out.println(Core.nodes.get("величина"));
         System.out.println(Core.nodes.get("длина"));
     }
     public static void parseLine(String text) {
@@ -46,11 +52,10 @@ public class CommandParser {
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
             }
 
-            //System.out.println(groups);
             if (groups.containsKey("term")) {
                 sentence = String.format("%s есть %s.", groups.get("term"), groups.get("definition"));
             }
-            Sentence parsedSentence = null;
+            Sentence parsedSentence;
             Sentence condition = null;
             if (groups.containsKey("condition")) {
                 parsedSentence = AnalyzeTextUtil.makeDependencies(groups.get("command"));
@@ -58,10 +63,10 @@ public class CommandParser {
             } else {
                 parsedSentence = AnalyzeTextUtil.makeDependencies(sentence);
             }
-            //System.out.println(parsedSentence.getWords());
+
             Set<Node> checkedNodes = new HashSet<>();
             for (Word word : parsedSentence.getVerbs()) {
-                for (Word actor : word.getBonds("АКТЁР")) {
+                for (Word actor : word.getBond("АКТЁР")) {
                     Node node;
                     Line line;
                     if (condition != null) {

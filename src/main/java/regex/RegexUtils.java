@@ -92,9 +92,12 @@ public class RegexUtils {
                     boolean stop = true;
                     int step = start;
                     while (m.find(step)) { // We iterate through all the matches from the current start
-                        stop = false;
                         Entry temp = new Entry();
                         for (String group : entry.getValue()) { // For each group
+                            if (m.group(group) == null) {
+                                continue;
+                            }
+                            stop = false;
                             log.add(String.format("Found group \"%s\" is set to \"%s\" at: %s", group, m.group(group), text));
                             // If we haven't encountered a group with this name, match, and position yet...
                             Optional<Entry> match = matchResults.stream().filter(r -> r.containsValue(group, m.group(group), m.end(group))).findFirst();
@@ -102,8 +105,16 @@ public class RegexUtils {
                                 temp.put(group, m.group(group), m.end(group)); // Store the group name, its match, and end position
                             }
                         }
+                        if (temp.isEmpty()) {
+                            stop = true;
+                            break;
+                        }
                         matchResults.add(temp); // Add all groups as an Entry
-                        step = m.end(0);
+                        step = m.end(m.groupCount()-1);
+                        if (step < 0) {
+                            stop = true;
+                            break;
+                        }
                     }
                     // We increase start and iterate again
                     if (!endPoss.isEmpty()) { // Move "start"

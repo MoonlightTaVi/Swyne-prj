@@ -52,11 +52,21 @@ public class Sentence {
         return ret;
     }
 
+    public Word getNextTo(Word previousWord) {
+        int id = words.indexOf(previousWord);
+        if (id >= 0) {
+            if (id+1 < words.size()) {
+                return words.get(id+1);
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         List<String> ret = new ArrayList<>();
         for (Word word : words) {
-            ret.add(word.toString());
+            ret.add(word.bondsToString());
         }
         return String.join("\n", ret);
     }

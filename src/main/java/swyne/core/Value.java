@@ -39,12 +39,11 @@ public class Value extends Node {
         Sentence sentence = line.getLine();
         List<Word> verbs = sentence.getVerbs();
         for (Word verb : verbs) {
-            for (Word actor : verb.getBonds("АКТЁР")) {
+            for (Word actor : verb.getBond("АКТЁР")) {
                 if (!matchActor(actor)) {
                     continue;
                 }
-                Word nextVerb = verb;
-                while (nextVerb != null) {
+                for (Word nextVerb = verb; nextVerb != null; nextVerb = nextVerb.getNextVerb()) {
                     if (Main.compareLists(nextVerb.getLemmas(), List.of("находиться", "лежать")) > 0) {
                         BondCollector bondCollector = new BondCollector(nextVerb);
                         bondCollector.goTo("ЧИСЛОВОЙАРГУМЕНТ")
@@ -67,13 +66,11 @@ public class Value extends Node {
                         if (sumW != null) {
                             if (!args.containsKey("значение")) {
                                 System.err.printf("No value has been assigned to \"%s\".%n", actor.getName());
-                                nextVerb = nextVerb.getNextVerb();
                                 continue;
                             }
                             sum(sumW, nextVerb.getLemmas().contains("увеличиться"));
                         }
                     }
-                    nextVerb = nextVerb.getNextVerb();
                 }
             }
         }
@@ -90,7 +87,7 @@ public class Value extends Node {
             if (!matchActor(actor)) {
                 continue;
             }
-            Set<Word> comparisons = actor.getBonds("СРАВН");
+            Set<Word> comparisons = actor.getBond("СРАВН");
             if (comparisons.isEmpty()) {
                 continue;
             }

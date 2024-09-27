@@ -24,9 +24,9 @@ public class AnalyzeTextUtil {
         //MakeDependencyTree("Сильный, могучий воин бьёт слабого бандита");
         //MakeDependencyTree("Длина есть величина. Длина лежит от 0 до 100.");
         //MakeDependencyTree("Воин сильный больного");
-        //System.out.println(new WordRole("больше", 0));
+        System.out.println(new Word("который", 0));
         //System.out.println(MakeDependencyTree("Может бить ногой").getVerbs());
-        System.out.println(makeDependencies("Длина может быть больше 50 или меньше 50, длина может быть больше 30").getActors().get(1).compareLemmas(makeDependencies("Длина больше 50").getActors().get(0)));
+        //System.out.println(makeDependencies("Длина может быть больше 50 или меньше 50, длина может быть больше 30").getActors().get(1).compareLemmas(makeDependencies("Длина больше 50").getActors().get(0)));
     }
 
     // Prepares the text for further analysis by dividing it into separate tokens
