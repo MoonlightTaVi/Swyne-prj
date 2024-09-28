@@ -84,9 +84,25 @@ public class Word {
         }
         return ret;
     }
-
     public List<String> getLemmas() {
-        return lemmas;
+        return getLemmas(false);
+    }
+    public List<String> getLemmas(boolean includePronouns) {
+        List<String> ret = new ArrayList<>(lemmas);
+        if (includePronouns) {
+            if (getPOSJoined().contains("С")) {
+                if (getGenderJoined().contains("мр")) {
+                    ret.add("он");
+                }
+                if (getGenderJoined().contains("жр")) {
+                    ret.add("она");
+                }
+                if (getGenderJoined().contains("ср")) {
+                    ret.add("оно");
+                }
+            }
+        }
+        return ret;
     }
 
     public List<Set<String>> getPOS() {
@@ -99,6 +115,9 @@ public class Word {
 
     public List<Set<String>> getGender() {
         return findMorphology(new String[]{"мр", "жр", "ср"});
+    }
+    public Set<String> getGenderJoined() {
+        return findMorphologyJoined(new String[]{"мр", "жр", "ср"});
     }
 
     public List<Set<String>> getNumber() {
@@ -417,7 +436,7 @@ public class Word {
     }
 
     public Set<String> getAllBondLemmas(Set<Word> ignore) {
-        Set<String> ret = new HashSet<>(lemmas);
+        Set<String> ret = new HashSet<>(getLemmas(true));
         for (Map.Entry<String, Set<Word>> entry : bonds.entrySet()) {
             for (Word word : entry.getValue()) {
                 if (!ignore.contains(word)) {
@@ -429,11 +448,11 @@ public class Word {
     }
 
     public Set<String> getAllBondLemmas(Set<String> checked, Set<Word> ignore) {
-        Set<String> ret = new HashSet<>(lemmas);
+        Set<String> ret = new HashSet<>(getLemmas(true));
         ret.addAll(checked);
         for (Map.Entry<String, Set<Word>> entry : bonds.entrySet()) {
             for (Word word : entry.getValue()) {
-                if (!ret.contains(word.getLemmas().get(0)) && !ignore.contains(word)) {
+                if (!ret.contains(word.getLemmas(true).get(0)) && !ignore.contains(word)) {
                     ret.addAll(word.getAllBondLemmas(ret, ignore));
                 }
             }
@@ -459,6 +478,12 @@ public class Word {
             return matchWith(matchTo, "ч,р") > 0;
         }
         return false;
+    }
+
+    public boolean isCoreNode() {
+        Map<String, Set<Word>> cutBonds = new HashMap<>(Map.copyOf(bonds));
+        cutBonds.remove("ДЕЙСТВИЕ");
+        return cutBonds.isEmpty();
     }
 
     @Override

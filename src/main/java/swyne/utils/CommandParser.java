@@ -38,6 +38,7 @@ public class CommandParser {
         System.out.println("Result:");
         System.out.println(Core.nodes.get("величина"));
         System.out.println(Core.nodes.get("длина"));
+        System.out.println(Core.nodes.get("илья"));
     }
     public static void parseLine(String text) {
         String[] sentences = text.split("(?<=[.!?/';])\\s+");

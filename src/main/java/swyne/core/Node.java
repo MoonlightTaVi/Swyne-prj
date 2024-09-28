@@ -49,11 +49,16 @@ public class Node {
         List<Word> verbs = sentence.getVerbs();
         for (Word verb : verbs) {
             for (Word actor : verb.getBond("АКТЁР")) {
-                if (!matchActor(actor)) {
+                if (Main.compareLists(actor.getLemmas(), List.of("величина", "локация", "сущность")) > 0) {
                     continue;
                 }
-                if (Main.compareLists(actor.getLemmas(), List.of("величина", "локация")) > 0) {
-                    continue;
+                Node node = this;
+                if (!matchActor(actor)) {
+                    node = Core.getNode(actor);
+                    //System.out.println(node);
+                    if (node == null) {
+                        continue;
+                    }
                 }
                 for (Word nextVerb = verb; nextVerb != null; nextVerb = nextVerb.getNextVerb()) {
                     if (Main.compareLists(nextVerb.getLemmas(), List.of("есть")) > 0) {
@@ -84,8 +89,11 @@ public class Node {
                             }
                         }
                     }
-                    if (Main.compareLists(nextVerb.getLemmas(), List.of("мочь")) > 0) {
-                        findAndExecute(line, nextVerb);
+                    else if (Main.compareLists(nextVerb.getLemmas(), List.of("мочь")) > 0) {
+                        node.findAndExecute(line, nextVerb);
+                    }
+                    else {
+                        node.findAndExecute(line, nextVerb);
                     }
                 }
             }
@@ -95,7 +103,7 @@ public class Node {
 
     public void findAndExecute(Line start, Word verb) {
         for (Word actor : start.getLine().getActors()) {
-            boolean started = false;
+            boolean started = !code.contains(start);
             for (Line line : code) {
                 if (line != start && !started) {
                     continue;
@@ -109,7 +117,7 @@ public class Node {
                     }
                     if (line.getCondition() != null) {
                         for (Word conditionActor : line.getCondition().getActors()) {
-                            if (Main.compareLists(actor.getLemmas(), conditionActor.getLemmas()) == 0) {
+                            if (Main.compareLists(actor.getLemmas(true), conditionActor.getLemmas(true)) == 0) {
                                 continue;
                             }
                             Set<Word> ignore = new HashSet<>(new BondCollector(actor).collect("ДЕЙСТВИЕ").get());
@@ -117,7 +125,7 @@ public class Node {
                             if (!actor.compareLemmas(conditionActor, ignore)) {
                                 continue;
                             }
-                            if (check(line.getCondition()) == 1) {
+                            if (check(line.getCondition())) {
                                 execute(line);
                                 return;
                             }
@@ -139,8 +147,8 @@ public class Node {
         }
     }
 
-    public int check(Sentence condition) {
-        return -1;
+    public boolean check(Sentence condition) {
+        return true;
     }
 
     public String getName() {

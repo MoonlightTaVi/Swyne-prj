@@ -15,17 +15,7 @@ public class AnalyzeTextUtil {
     public static void main(String[] args) {
         Main.setup();
 
-        //System.out.println(testTransformations("что"));
-        //System.out.println(new WordRole("больного", 0).matchWith(new WordRole("сильный", 1), "п,р,ч"));
-        //System.out.println(new WordRole("воин", 0).matchWith(new WordRole("сильный", 1), "п,р,ч"));
-        //System.out.println(new WordRole("стул", 0).matchWith(new WordRole("сильный", 1), "р,ч,п"));
-        //.out.println(new WordRole("слабого", 0));
-        //System.out.println(new WordRole("по", 0));
-        //MakeDependencyTree("Сильный, могучий воин бьёт слабого бандита");
-        //MakeDependencyTree("Длина есть величина. Длина лежит от 0 до 100.");
-        //MakeDependencyTree("Воин сильный больного");
-        System.out.println(new Word("который", 0));
-        //System.out.println(MakeDependencyTree("Может бить ногой").getVerbs());
+        System.out.println(new Word("считал", 0));
         //System.out.println(makeDependencies("Длина может быть больше 50 или меньше 50, длина может быть больше 30").getActors().get(1).compareLemmas(makeDependencies("Длина больше 50").getActors().get(0)));
     }
 

@@ -78,10 +78,8 @@ public class Value extends Node {
     }
 
     @Override
-    public int check(Sentence condition) {
-        if (super.check(condition) == 0) {
-            return 0;
-        }
+    public boolean check(Sentence condition) {
+        boolean sup = super.check(condition);
         List<Word> actors = condition.getActors();
         for (Word actor : actors) {
             if (!matchActor(actor)) {
@@ -111,21 +109,21 @@ public class Value extends Node {
                     //System.out.println(comparison.getLemmas());
                     if (comparison.getLemmas().contains("мало")) {
                         if (value < d) {
-                            return 1;
+                            return true;
                         } else {
-                            return 0;
+                            return false;
                         }
                     }
                     if (comparison.getLemmas().contains("много")) {
                         if (value > d) {
-                            return 1;
+                            return true;
                         } else {
-                            return 0;
+                            return false;
                         }
                     }
                 }
             }
         }
-        return 0;
+        return sup;
     }
 }
